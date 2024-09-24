@@ -40,6 +40,10 @@ pathspec==0.12.1
     # via black
 platformdirs==4.3.6
     # via black
+pyaes==1.6.1
+    # via telethon
+pyasn1==0.6.1
+    # via rsa
 pydantic==2.9.2
     # via
     #   fastapi
@@ -52,6 +56,8 @@ python-dotenv==1.0.1
     # via
     #   -r requirements.in
     #   pydantic-settings
+rsa==4.9
+    # via telethon
 sniffio==1.3.1
     # via anyio
 sqlalchemy[asyncio]==2.0.35
@@ -60,6 +66,8 @@ sqlalchemy[asyncio]==2.0.35
     #   alembic
 starlette==0.38.5
     # via fastapi
+telethon==1.37.0
+    # via -r requirements.in
 typing-extensions==4.12.2
     # via
     #   alembic
