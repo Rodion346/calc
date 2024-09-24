@@ -1,0 +1,8 @@
+SQLAlchemy[asyncio]
+fastapi
+uvicorn
+python-dotenv
+pydantic_settings
+asyncpg
+alembic
+black
