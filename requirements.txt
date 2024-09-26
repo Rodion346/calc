@@ -4,34 +4,67 @@
 #
 #    pip-compile
 #
+aiofiles==24.1.0
+    # via aiogram
+aiogram==3.13.1
+    # via -r requirements.in
+aiohappyeyeballs==2.4.0
+    # via aiohttp
+aiohttp==3.10.6
+    # via aiogram
+aiosignal==1.3.1
+    # via aiohttp
 alembic==1.13.2
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
 anyio==4.5.0
     # via starlette
+apscheduler==3.10.4
+    # via -r requirements.in
 async-timeout==4.0.3
     # via asyncpg
 asyncpg==0.29.0
     # via -r requirements.in
+attrs==24.2.0
+    # via aiohttp
 black==24.8.0
     # via -r requirements.in
+certifi==2024.8.30
+    # via aiogram
 click==8.1.7
     # via
     #   black
     #   uvicorn
 fastapi==0.115.0
     # via -r requirements.in
+frozenlist==1.4.1
+    # via
+    #   aiohttp
+    #   aiosignal
 greenlet==3.1.0
     # via sqlalchemy
 h11==0.14.0
     # via uvicorn
 idna==3.10
-    # via anyio
+    # via
+    #   anyio
+    #   yarl
+jinja2==3.1.4
+    # via sqladmin
+magic-filter==1.0.12
+    # via aiogram
 mako==1.3.5
     # via alembic
 markupsafe==2.1.5
-    # via mako
+    # via
+    #   jinja2
+    #   mako
+    #   wtforms
+multidict==6.1.0
+    # via
+    #   aiohttp
+    #   yarl
 mypy-extensions==1.0.0
     # via black
 packaging==24.1
@@ -46,6 +79,7 @@ pyasn1==0.6.1
     # via rsa
 pydantic==2.9.2
     # via
+    #   aiogram
     #   fastapi
     #   pydantic-settings
 pydantic-core==2.23.4
@@ -56,24 +90,42 @@ python-dotenv==1.0.1
     # via
     #   -r requirements.in
     #   pydantic-settings
+python-multipart==0.0.10
+    # via sqladmin
+pytz==2024.2
+    # via apscheduler
 rsa==4.9
     # via telethon
+six==1.16.0
+    # via apscheduler
 sniffio==1.3.1
     # via anyio
+sqladmin==0.19.0
+    # via -r requirements.in
 sqlalchemy[asyncio]==2.0.35
     # via
     #   -r requirements.in
     #   alembic
+    #   sqladmin
 starlette==0.38.5
-    # via fastapi
+    # via
+    #   fastapi
+    #   sqladmin
 telethon==1.37.0
     # via -r requirements.in
 typing-extensions==4.12.2
     # via
+    #   aiogram
     #   alembic
     #   fastapi
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+tzlocal==5.2
+    # via apscheduler
 uvicorn==0.30.6
     # via -r requirements.in
+wtforms==3.1.2
+    # via sqladmin
+yarl==1.12.1
+    # via aiohttp

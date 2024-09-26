@@ -1,4 +1,6 @@
 import logging
+from contextlib import asynccontextmanager
+
 from sqlalchemy.future import select
 from ..models.channel import Channel
 from ..models.db_helper import db_helper
@@ -7,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class ChannelRepository:
-    def __init__(self):
-        self.db = db_helper.session_getter
+    def __init__(self, db):
+        self.db = db
 
     async def select_all_channels(self):
         """Получение всех каналов из базы данных."""
@@ -18,25 +20,31 @@ class ChannelRepository:
             logger.info("Получены все каналы из базы данных.")
             return channels
 
-    async def add_channel(self, channel):
+    async def add_channel(self, channel, folder_id):
         """Добавление нового канала в базу данных."""
         async with self.db() as session:
             try:
+                result = await session.execute(select(Channel).filter_by(channel_id=str(channel.id)))
+                existing_channel = result.scalars().first()
+
+                if existing_channel:
+                    logger.warning(f"Канал с channel_id={channel.id} уже существует.")
+                    return
+
                 new_channel = Channel(
-                    id=await self.get_next_id(),
-                    folder_id=channel["folder_id"],
-                    channel_id=channel["channel_id"],
-                    channel_name=channel["channel_name"],
+                    folder_id=folder_id,
+                    channel_id=str(channel.id),
+                    channel_name=channel.title,
                     channel_stats="test",
-                    access_hash=channel["access_hash"],
+                    access_hash=str(channel.access_hash),
                 )
                 session.add(new_channel)
                 await session.commit()
-                logger.info(f"Канал {channel['channel_name']} добавлен в базу данных.")
+                logger.info(f"Канал {channel.title} добавлен в базу данных.")
             except Exception as e:
                 await session.rollback()
                 logger.error(
-                    f"Ошибка при добавлении канала {channel['channel_name']}: {e}"
+                    f"Ошибка при добавлении канала {channel.title}: {e}"
                 )
                 return f"Ошибка. Проблема с запросом в базу данных _ add channel.\n{e}"
         return "True"

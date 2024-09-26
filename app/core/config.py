@@ -2,6 +2,11 @@ from pydantic import BaseModel
 from pydantic import PostgresDsn
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+
+
+# Загрузка переменных окружения из файла .env
+load_dotenv()
 
 
 class DatabaseConfig(BaseModel):

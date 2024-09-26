@@ -7,3 +7,6 @@ asyncpg
 alembic
 black
 telethon
+aiogram
+sqladmin
+apscheduler
