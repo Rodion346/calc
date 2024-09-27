@@ -5,7 +5,7 @@ from app.core.repositories.folder import FolderRepository
 from app.core.repositories.channel import ChannelRepository
 from app.core.models.db_helper import db_helper
 
-folderRepo = FolderRepository()
+
 channelRepo = ChannelRepository(db_helper.session_getter)
 
 
@@ -26,17 +26,14 @@ class TelegramClientWrapper:
         await self.client.disconnect()
 
     async def get_folders(self):
-        await self.start()
         result = await self.client(GetDialogFiltersRequest())
         folders = []
         for folder in result.filters:
             if isinstance(folder, DialogFilter):
                 folders.append(folder)
-        await self.stop()
         return folders
 
     async def get_channel_in_folders(self, folder_names):
-        await self.start()
         folders = await self.get_folders()
         channels = []
         for folder in folders:
@@ -47,8 +44,6 @@ class TelegramClientWrapper:
                         entity_info, "broadcast"
                     ):
                         channels.append(entity_info)
-
-        await self.stop()
         return channels
 
 
@@ -61,6 +56,8 @@ if __name__ == "__main__":
         await client_wrapper.start()
         folders = ["RF", "DF"]
         ch = await client_wrapper.get_folders()
+        for i in ch:
+            print(i)
         await client_wrapper.stop()
 
     asyncio.run(main())
