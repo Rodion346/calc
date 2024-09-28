@@ -58,6 +58,16 @@ class FolderRepository:
             logger.info(f"Получена папка с ID {folder_id}.")
             return folder
 
+    async def select_folder_by_title(self, folder_title):
+        """Получение папки по title."""
+        async with self.db() as session:
+            result = await session.execute(
+                select(Folder).filter(Folder.folder_title == folder_title)
+            )
+            folder = result.scalars().first()
+            logger.info(f"Получена папка с title {folder_title}.")
+            return folder
+
     async def select_all_active_folders(self):
         """Получение всех активных папок."""
         async with self.db() as session:
@@ -68,3 +78,9 @@ class FolderRepository:
             logger.info("Получены все активные папки.")
             return folders
 
+    async def update_stats_folder(self, folder_title, stats):
+        async with self.db() as session:
+            await session.execute(
+                update(Folder).where(Folder.folder_title == folder_title).values(folder_status=stats))
+            await session.commit()
+            logger.info(f"Обновлен статус папки")

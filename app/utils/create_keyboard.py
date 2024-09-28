@@ -3,9 +3,10 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from core.models.db_helper import db_helper
-from core.repositories import ChannelRepository
+from core.repositories import ChannelRepository, FolderRepository
 
 channelRepo = ChannelRepository(db_helper.session_getter)
+folderRepo = FolderRepository(db_helper.session_getter)
 
 
 class CreateKeyboard:
@@ -41,6 +42,9 @@ class CreateKeyboard:
         for i in range(0, len(folders), row):
             row_buttons = []
             for folder in folders[i : i + row]:
+                stats_folder = (
+                    await folderRepo.select_folder_by_id(str(folder.id))
+                ).folder_status
                 channels = await channelRepo.select_channels_by_folder_id(folder.title)
                 active_channels, test_channels, inactive_channels = 0, 0, 0
                 for channel in channels:
@@ -51,25 +55,41 @@ class CreateKeyboard:
                     elif channel.channel_stats == "disable":
                         inactive_channels += 1
                 info_button = InlineKeyboardButton(
-                    text=f"{folder.title}   ||  🟢 - {active_channels} 🟡 - {test_channels} 🔴 - {inactive_channels}",
+                    text=f"{'🔓' if stats_folder == 'active' else '🔐'}   {folder.title}   ||  🟢 - {active_channels} 🟡 - {test_channels} 🔴 - {inactive_channels}",
                     callback_data=f"info_{folder.title}",
                 )
                 row_buttons.extend([info_button])
             k_b.row(*row_buttons)
         return k_b.as_markup()
 
-    async def create_kb_chanel_settings(self, channel_id):
+    async def create_kb_chanel_settings(self, channel_id, f_title):
         kb_builder = InlineKeyboardBuilder()
         button1 = InlineKeyboardButton(
-            text="🟢 Активировать", callback_data=f"set_active_{channel_id}"
+            text="🟢 Активировать", callback_data=f"set_active_{channel_id}_{f_title}"
         )
         kb_builder.add(button1)
         button2 = InlineKeyboardButton(
-            text="🟡 Тестировать", callback_data=f"set_test_{channel_id}"
+            text="🟡 Тестировать", callback_data=f"set_test_{channel_id}_{f_title}"
         )
         kb_builder.add(button2)
         button3 = InlineKeyboardButton(
-            text="🔴 Деактивировать", callback_data=f"set_disable_{channel_id}"
+            text="🔴 Деактивировать",
+            callback_data=f"set_disable_{channel_id}_{f_title}",
         )
         kb_builder.add(button3)
+        return kb_builder.as_markup()
+
+    async def state_folder(self, stats, title=""):
+        kb_builder = InlineKeyboardBuilder()
+        if stats == "disable":
+            button1 = InlineKeyboardButton(
+                text="ON", callback_data=f"folder_on_{title}"
+            )
+            kb_builder.add(button1)
+        else:
+            button2 = InlineKeyboardButton(
+                text="OFF", callback_data=f"folder_off_{title}"
+            )
+            kb_builder.add(button2)
+
         return kb_builder.as_markup()
