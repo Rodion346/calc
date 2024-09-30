@@ -7,8 +7,8 @@ from ..models.signal import Signal
 logger = logging.getLogger(__name__)
 
 class SignalRepository:
-    def __init__(self):
-        self.db = db_helper.session_getter
+    def __init__(self, db):
+        self.db = db
 
     async def select_all_signals(self):
         """Получение всех сигналов из базы данных."""
@@ -29,7 +29,7 @@ class SignalRepository:
                         channel_name=signal['channel_name'],
                         date=signal['date'],
                         time=signal['time'],
-                        coin=signal['coin'],
+                        coin=signal['Coin'],
                         trend=signal['trend'],
                         tvh=signal['tvh'],
                         rvh=signal['rvh'],

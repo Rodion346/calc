@@ -1,3 +1,4 @@
+import logging
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -5,26 +6,37 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from core.models.db_helper import db_helper
 from core.repositories import ChannelRepository, FolderRepository
 
+# Настройка логгера
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 channelRepo = ChannelRepository(db_helper.session_getter)
 folderRepo = FolderRepository(db_helper.session_getter)
 
 
 class CreateKeyboard:
     def __init__(self):
+        """Инициализация класса CreateKeyboard."""
         pass
 
     async def create_keyboard(self, buttons, columns=2):
+        """Создание клавиатуры с кнопками."""
+        logger.info("Начало создания клавиатуры с кнопками.")
         keyboard_buttons = []
         for i in range(0, len(buttons), columns):
             row = [
                 types.KeyboardButton(text=button) for button in buttons[i : i + columns]
             ]
             keyboard_buttons.append(row)
-        return types.ReplyKeyboardMarkup(
+        keyboard = types.ReplyKeyboardMarkup(
             keyboard=keyboard_buttons, resize_keyboard=True
         )
+        logger.info("Создание клавиатуры с кнопками завершено.")
+        return keyboard
 
     async def create_kb_channel(self, folders, row=1):
+        """Создание инлайн-клавиатуры для каналов."""
+        logger.info("Начало создания инлайн-клавиатуры для каналов.")
         k_b = InlineKeyboardBuilder()
         for i in range(0, len(folders), row):
             row_buttons = [
@@ -35,10 +47,16 @@ class CreateKeyboard:
                 for folder in folders[i : i + row]
             ]
             k_b.row(*row_buttons)
-        return k_b.as_markup()
+        keyboard = k_b.as_markup()
+        logger.info("Создание инлайн-клавиатуры для каналов завершено.")
+        return keyboard
 
     async def create_kb_folders(self, folders, row=1):
+        """Создание инлайн-клавиатуры для папок."""
+        logger.info("Начало создания инлайн-клавиатуры для папок.")
         k_b = InlineKeyboardBuilder()
+        butt_all = InlineKeyboardButton(text="ALL", callback_data="info_ALL")
+        k_b.add(butt_all)
         for i in range(0, len(folders), row):
             row_buttons = []
             for folder in folders[i : i + row]:
@@ -60,9 +78,13 @@ class CreateKeyboard:
                 )
                 row_buttons.extend([info_button])
             k_b.row(*row_buttons)
-        return k_b.as_markup()
+        keyboard = k_b.as_markup()
+        logger.info("Создание инлайн-клавиатуры для папок завершено.")
+        return keyboard
 
     async def create_kb_chanel_settings(self, channel_id, f_title):
+        """Создание инлайн-клавиатуры для настроек канала."""
+        logger.info("Начало создания инлайн-клавиатуры для настроек канала.")
         kb_builder = InlineKeyboardBuilder()
         button1 = InlineKeyboardButton(
             text="🟢 Активировать", callback_data=f"set_active_{channel_id}_{f_title}"
@@ -77,9 +99,13 @@ class CreateKeyboard:
             callback_data=f"set_disable_{channel_id}_{f_title}",
         )
         kb_builder.add(button3)
-        return kb_builder.as_markup()
+        keyboard = kb_builder.as_markup()
+        logger.info("Создание инлайн-клавиатуры для настроек канала завершено.")
+        return keyboard
 
     async def state_folder(self, stats, title=""):
+        """Создание инлайн-клавиатуры для изменения статуса папки."""
+        logger.info("Начало создания инлайн-клавиатуры для изменения статуса папки.")
         kb_builder = InlineKeyboardBuilder()
         if stats == "disable":
             button1 = InlineKeyboardButton(
@@ -92,4 +118,6 @@ class CreateKeyboard:
             )
             kb_builder.add(button2)
 
-        return kb_builder.as_markup()
+        keyboard = kb_builder.as_markup()
+        logger.info("Создание инлайн-клавиатуры для изменения статуса папки завершено.")
+        return keyboard
