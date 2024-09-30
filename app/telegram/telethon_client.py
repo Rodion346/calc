@@ -138,6 +138,16 @@ class TelegramClientWrapper:
         text_dict = await AI(event.message)
 
         text_dict = json.loads(text_dict)
+        print(text_dict, type(text_dict))
+        if text_dict == {}:
+            await self.client.send_message(
+                self.destination_channel_id,
+                event.message.text
+                + "\n\n"
+                + "Это не сигнал и в активных каналах его не будет",
+                parse_mode="html",
+            )
+            return
 
         channelInfo = await self.client.get_entity(event.chat_id)
         now = datetime.now()
