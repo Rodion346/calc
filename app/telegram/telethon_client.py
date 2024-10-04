@@ -1,11 +1,17 @@
 import json
 import logging
 from telethon import TelegramClient, events
+from telethon.errors import ChannelPrivateError
 from telethon.tl.functions.messages import GetDialogFiltersRequest
-from telethon.tl.types import InputPeerEmpty, DialogFilter
-from app.core.repositories.folder import FolderRepository
-from app.core.repositories.channel import ChannelRepository
-from app.core.models.db_helper import db_helper
+from telethon.tl.types import (
+    InputPeerEmpty,
+    DialogFilter,
+    InputPeerChannel,
+    PeerChannel,
+)
+from core.repositories.folder import FolderRepository
+from core.repositories.channel import ChannelRepository
+from core.models.db_helper import db_helper
 from core.repositories import SignalRepository
 from utils.AI_chat import AI
 from datetime import datetime
@@ -25,13 +31,16 @@ signalRepo = SignalRepository(db_helper.session_getter)
 class TelegramClientWrapper:
     def __init__(
         self,
-        api_id=26515046,
-        api_hash="22b6dbdfce28e71ce66911f29ccc5bfe",
+        api_id=23069367,
+        api_hash="cdc1df657033fc09cdf875fe4c029708",
         session_name="session",
-        destination_channel_id=-1002498219342,
+        destination_channel_id=--1002112786462,
+        system_version="4.16.30-vxCUSTOM",
     ):
         """Инициализация TelegramClientWrapper."""
-        self.client = TelegramClient(session_name, api_id, api_hash)
+        self.client = TelegramClient(
+            session_name, api_id, api_hash, system_version=system_version
+        )
         self.destination_channel_id = destination_channel_id
         self.source_channel_id = []
         logger.info("Инициализация TelegramClientWrapper завершена.")
@@ -70,11 +79,18 @@ class TelegramClientWrapper:
         for folder in folders:
             if folder.title in folders_name:
                 for entity in folder.include_peers:
-                    entity_info = await self.client.get_entity(entity)
-                    if hasattr(entity_info, "megagroup") or hasattr(
-                        entity_info, "broadcast"
-                    ):
+                    entity_info = await self.client.get_input_entity(entity)
+                    logger.info(f"{entity_info}")
+                    try:
+                        entity_info = await self.client.get_entity(
+                            entity_info.channel_id
+                        )
                         await channelRepo.add_channel(entity_info, folder.title)
+                    except ChannelPrivateError:
+                        print(
+                            "Ошибка: нет доступа к каналу. Возможно, вы забанены или канал частный."
+                        )
+        await folderRepo.add_folders(folders)
 
         for i in await folderRepo.select_all_folders():
             folders_name.append(i.folder_title)
@@ -82,8 +98,9 @@ class TelegramClientWrapper:
         for folder in folders:
             if folder.title in folders_name:
                 for entity in folder.include_peers:
-                    entity_info = await self.client.get_entity(entity)
-                    list_channel.append(int(entity_info.id))
+                    entity_info = await self.client.get_input_entity(entity)
+                    if isinstance(entity_info, InputPeerChannel):
+                        list_channel.append(int(entity.channel_id))
         channels = await channelRepo.select_all_channels()
         for channel in channels:
             if int(channel.channel_id) not in list_channel:
@@ -97,7 +114,7 @@ class TelegramClientWrapper:
         for folder in folders:
             if folder.title in folder_names:
                 for entity in folder.include_peers:
-                    entity_info = await self.client.get_entity(entity)
+                    entity_info = await self.client.get_input_entity(entity)
                     if hasattr(entity_info, "megagroup") or hasattr(
                         entity_info, "broadcast"
                     ):
@@ -123,7 +140,7 @@ class TelegramClientWrapper:
 
     async def periodic_update_channels(self):
         while True:
-            await asyncio.sleep(15)  # Обновляем каждые 60 секунд
+            await asyncio.sleep(60)  # Обновляем каждые 60 секунд
             await self.update_channels()
 
     def update_event_handlers(self):
@@ -135,17 +152,29 @@ class TelegramClientWrapper:
 
     async def handler(self, event):
         # Пересылаем сообщение в целевой канал
-        text_dict = await AI(event.message)
-
-        text_dict = json.loads(text_dict)
-        print(text_dict, type(text_dict))
-        if text_dict == {}:
+        text_dict = await AI(event.message.text)
+        if text_dict == "False":
             await self.client.send_message(
                 self.destination_channel_id,
                 event.message.text
                 + "\n\n"
                 + "Это не сигнал и в активных каналах его не будет",
-                parse_mode="html",
+            )
+            return
+        elif (
+            (text_dict["Coin"] is None)
+            or (text_dict["Trand"] is None)
+            or (
+                (text_dict["Entrance_point_tvh"] is None)
+                and (text_dict["Entrance_point_lvh"] is None)
+            )
+            or (text_dict["Take_profit"] is None)
+        ):
+            await self.client.send_message(
+                self.destination_channel_id,
+                event.message.text
+                + "\n\n"
+                + "Это не сигнал и в активных каналах его не будет",
             )
             return
 
@@ -181,7 +210,7 @@ client_wrapper = TelegramClientWrapper()
 
 
 async def main():
-    await client_wrapper.siclesa()
+    await client_wrapper.stop()
 
 
 # Запускаем асинхронную функцию

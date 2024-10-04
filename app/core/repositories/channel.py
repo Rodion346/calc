@@ -28,28 +28,28 @@ class ChannelRepository:
         """Добавление нового канала в базу данных."""
         async with self.db() as session:
             try:
-                logger.info(f"Проверка существования канала с channel_id={channel.id}.")
-                result = await session.execute(select(Channel).filter_by(channel_id=str(channel.id)))
+                logger.info(f"Проверка существования канала с channel_id={channel.channel_id}.")
+                result = await session.execute(select(Channel).filter_by(channel_id=str(channel.channel_id)))
                 existing_channel = result.scalars().first()
 
                 if existing_channel:
-                    logger.warning(f"Канал с channel_id={channel.id} уже существует.")
+                    logger.warning(f"Канал с channel_id={channel.channel_id} уже существует.")
                     return
 
                 new_channel = Channel(
                     folder_id=folder_id,
-                    channel_id=str(channel.id),
-                    channel_name=channel.title,
+                    channel_id=str(channel.channel_id),
+                    channel_name=channel.channel_name,
                     channel_stats="test",
                     access_hash=str(channel.access_hash),
                 )
                 session.add(new_channel)
                 await session.commit()
-                logger.info(f"Канал {channel.title} добавлен в базу данных.")
+                logger.info(f"Канал {channel.channel_name} добавлен в базу данных.")
 
             except Exception as e:
                 await session.rollback()
-                logger.error(f"Ошибка при добавлении канала {channel.title}: {e}")
+                logger.error(f"Ошибка при добавлении канала {channel.channel_name}: {e}")
                 return f"Ошибка. Проблема с запросом в базу данных _ add channel.\n{e}"
         return "True"
 
@@ -82,6 +82,7 @@ class ChannelRepository:
             )
             channels = result.scalars().all()
             logger.info(f"Получены каналы для папки с ID {folder_id}.")
+            logger.info(f"{channels}")
             return channels
 
     async def update_stats_channel(self, channel_id, stats):
