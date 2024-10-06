@@ -1,5 +1,9 @@
 import json
 import logging
+
+import asyncio
+
+import ccxt
 from telethon import TelegramClient, events
 from telethon.errors import ChannelPrivateError
 from telethon.tl.functions.messages import GetDialogFiltersRequest
@@ -13,9 +17,10 @@ from core.repositories.folder import FolderRepository
 from core.repositories.channel import ChannelRepository
 from core.models.db_helper import db_helper
 from core.repositories import SignalRepository
-from utils.AI_chat import AI
+from telegram.parser_core import parser
+
 from datetime import datetime
-import asyncio
+
 
 from utils.create_templates import format_message
 
@@ -31,16 +36,13 @@ signalRepo = SignalRepository(db_helper.session_getter)
 class TelegramClientWrapper:
     def __init__(
         self,
-        api_id=23069367,
-        api_hash="cdc1df657033fc09cdf875fe4c029708",
+        api_id=26515046,
+        api_hash="22b6dbdfce28e71ce66911f29ccc5bfe",
         session_name="session",
-        destination_channel_id=--1002112786462,
-        system_version="4.16.30-vxCUSTOM",
+        destination_channel_id=-1002498219342,
     ):
         """Инициализация TelegramClientWrapper."""
-        self.client = TelegramClient(
-            session_name, api_id, api_hash, system_version=system_version
-        )
+        self.client = TelegramClient(session_name, api_id, api_hash)
         self.destination_channel_id = destination_channel_id
         self.source_channel_id = []
         logger.info("Инициализация TelegramClientWrapper завершена.")
@@ -80,12 +82,11 @@ class TelegramClientWrapper:
             if folder.title in folders_name:
                 for entity in folder.include_peers:
                     entity_info = await self.client.get_input_entity(entity)
-                    logger.info(f"{entity_info}")
                     try:
-                        entity_info = await self.client.get_entity(
+                        entity_inf = await self.client.get_entity(
                             entity_info.channel_id
                         )
-                        await channelRepo.add_channel(entity_info, folder.title)
+                        await channelRepo.add_channel(entity_inf, folder.title)
                     except ChannelPrivateError:
                         print(
                             "Ошибка: нет доступа к каналу. Возможно, вы забанены или канал частный."
@@ -152,24 +153,12 @@ class TelegramClientWrapper:
 
     async def handler(self, event):
         # Пересылаем сообщение в целевой канал
-        text_dict = await AI(event.message.text)
-        if text_dict == "False":
-            await self.client.send_message(
-                self.destination_channel_id,
-                event.message.text
-                + "\n\n"
-                + "Это не сигнал и в активных каналах его не будет",
-            )
-            return
-        elif (
-            (text_dict["Coin"] is None)
-            or (text_dict["Trand"] is None)
-            or (
-                (text_dict["Entrance_point_tvh"] is None)
-                and (text_dict["Entrance_point_lvh"] is None)
-            )
-            or (text_dict["Take_profit"] is None)
-        ):
+        channelInfo = await self.client.get_entity(event.chat_id)
+        exchange = ccxt.binance()
+        markets = exchange.load_markets()
+
+        text_dict = await parser(event.message.text, markets, channelInfo)
+        if text_dict is None:
             await self.client.send_message(
                 self.destination_channel_id,
                 event.message.text
@@ -178,7 +167,6 @@ class TelegramClientWrapper:
             )
             return
 
-        channelInfo = await self.client.get_entity(event.chat_id)
         now = datetime.now()
         date = now.strftime("%Y-%m-%d")
         time = now.strftime("%H:%M:%S")

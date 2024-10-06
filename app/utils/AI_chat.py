@@ -54,8 +54,8 @@ mes = (
 )
 
 
-async def AI(mess):
-    chat_response = await client.agents.complete_async(
+def AI(mess):
+    chat_response = client.agents.complete(
         agent_id="ag:55c24037:20240929:untitled-agent:472eca29",
         messages=[
             {
