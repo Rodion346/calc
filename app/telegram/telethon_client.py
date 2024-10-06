@@ -42,7 +42,9 @@ class TelegramClientWrapper:
         destination_channel_id=-1002498219342,
     ):
         """Инициализация TelegramClientWrapper."""
-        self.client = TelegramClient(session_name, api_id, api_hash)
+        self.client = TelegramClient(
+            session_name, api_id, api_hash, system_version="4.16.30-vxCUSTOM"
+        )
         self.destination_channel_id = destination_channel_id
         self.source_channel_id = []
         logger.info("Инициализация TelegramClientWrapper завершена.")
